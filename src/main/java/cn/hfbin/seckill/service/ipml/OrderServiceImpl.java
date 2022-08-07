@@ -3,20 +3,19 @@ package cn.hfbin.seckill.service.ipml;
 import cn.hfbin.seckill.dao.OrdeInfoMapper;
 import cn.hfbin.seckill.entity.OrderInfo;
 import cn.hfbin.seckill.service.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 /**
- * Created by: HuangFuBin
- * Date: 2018/7/17
- * Time: 10:50
- * Such description:
+ * @Date 2022/7/24 17:30
+ * @Author zhuzhiwei
  */
 @Service("orderService")
 public class OrderServiceImpl implements OrderService {
-    @Autowired
-    OrdeInfoMapper ordeInfoMapper;
+    private final OrdeInfoMapper ordeInfoMapper;
+
+    public OrderServiceImpl(OrdeInfoMapper ordeInfoMapper) {
+        this.ordeInfoMapper = ordeInfoMapper;
+    }
 
     @Override
     public long addOrder(OrderInfo orderInfo) {

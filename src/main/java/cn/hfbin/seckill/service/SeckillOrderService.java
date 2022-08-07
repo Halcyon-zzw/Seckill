@@ -1,17 +1,14 @@
 package cn.hfbin.seckill.service;
 
-import cn.hfbin.seckill.bo.GoodsBo;
+import cn.hfbin.seckill.entity.bo.GoodsBo;
 import cn.hfbin.seckill.entity.OrderInfo;
 import cn.hfbin.seckill.entity.SeckillOrder;
 import cn.hfbin.seckill.entity.User;
 
 /**
- * My Blog : www.hfbin.cn
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/7/16
- * Time: 16:46
- * Such description:
+ * @Description 秒杀订单service
+ * @Date 2022/8/5 20:42
+ * @Author zhuzhiwei
  */
 public interface SeckillOrderService {
 
@@ -26,6 +23,6 @@ public interface SeckillOrderService {
 
     boolean checkPath(User user, long goodsId, String path);
 
-    String createMiaoshaPath(User user, long goodsId);
+    String createSecKillPath(User user, long goodsId);
 
 }

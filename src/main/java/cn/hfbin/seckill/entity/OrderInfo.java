@@ -1,14 +1,16 @@
 package cn.hfbin.seckill.entity;
 
 import lombok.*;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.Date;
-@Setter
-@Getter
+
+@Data
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class OrderInfo {
     private Long id;
 

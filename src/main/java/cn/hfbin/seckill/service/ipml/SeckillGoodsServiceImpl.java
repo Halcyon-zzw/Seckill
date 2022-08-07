@@ -1,24 +1,24 @@
 package cn.hfbin.seckill.service.ipml;
 
-import cn.hfbin.seckill.bo.GoodsBo;
 import cn.hfbin.seckill.dao.GoodsMapper;
+import cn.hfbin.seckill.entity.bo.GoodsBo;
 import cn.hfbin.seckill.service.SeckillGoodsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
- * Created by: HuangFuBin
- * Date: 2018/7/12
- * Time: 19:47
- * Such description:
+ * @Date 2022/7/24 17:32
+ * @Author zhuzhiwei
  */
-
 @Service("seckillGoodsService")
 public class SeckillGoodsServiceImpl implements SeckillGoodsService {
-    @Autowired
-    GoodsMapper goodsMapper;
+    private final GoodsMapper goodsMapper;
+
+    public SeckillGoodsServiceImpl(GoodsMapper goodsMapper) {
+        this.goodsMapper = goodsMapper;
+    }
+
     @Override
     public List<GoodsBo> getSeckillGoodsList() {
         return goodsMapper.selectAllGoodes();

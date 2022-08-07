@@ -1,13 +1,11 @@
-package cn.hfbin.seckill.bo;
+package cn.hfbin.seckill.entity.bo;
 
-import cn.hfbin.seckill.entity.Goods;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Setter
-@Getter
+@Data
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor

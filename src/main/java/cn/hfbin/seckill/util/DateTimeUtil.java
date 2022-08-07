@@ -8,12 +8,8 @@ import org.joda.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
- * My Blog : www.hfbin.cn
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/4/14
- * Time: 11:34
- * Such description:
+ * @Date 2022/7/24 19:10
+ * @Author zhuzhiwei
  */
 public class DateTimeUtil {
 

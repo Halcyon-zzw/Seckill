@@ -1,17 +1,14 @@
 package cn.hfbin.seckill.controller;
 
 import cn.hfbin.seckill.common.Const;
+import cn.hfbin.seckill.common.RedisPrefixKeyConst;
 import cn.hfbin.seckill.entity.User;
-import cn.hfbin.seckill.exception.HfbinException;
+import cn.hfbin.seckill.entity.result.Result;
 import cn.hfbin.seckill.param.LoginParam;
 import cn.hfbin.seckill.redis.RedisService;
 import cn.hfbin.seckill.redis.UserKey;
-import cn.hfbin.seckill.result.CodeMsg;
-import cn.hfbin.seckill.result.Result;
 import cn.hfbin.seckill.service.UserService;
 import cn.hfbin.seckill.util.CookieUtil;
-import cn.hfbin.seckill.util.JsonUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -22,35 +19,35 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 /**
- * Created by: HuangFuBin
- * Date: 2018/7/9
- * Time: 12:37
- * Such description:
+ * @Date 2022/7/24 16:20
+ * @Author zhuzhiwei
  */
 @Controller
 @RequestMapping("/user")
 public class LoginController {
 
-    @Autowired
-    RedisService redisService;
-    @Autowired
-    UserService userService;
+    private final RedisService redisService;
+    private final UserService userService;
+
+    public LoginController(RedisService redisService, UserService userService) {
+        this.redisService = redisService;
+        this.userService = userService;
+    }
+
     @RequestMapping("/login")
     @ResponseBody
-    public Result<User> doLogin(HttpServletResponse response, HttpSession session , @Valid LoginParam loginParam) {
-        Result<User> login = userService.login(loginParam);
-        if (login.isSuccess()){
-            CookieUtil.writeLoginToken(response,session.getId());
-            redisService.set(UserKey.getByName , session.getId() ,login.getData(), Const.RedisCacheExtime.REDIS_SESSION_EXTIME );
-        }
-        return login;
+    public Result<User> doLogin(HttpServletResponse response, HttpSession session, @Valid LoginParam loginParam) {
+        User user = userService.login(loginParam);
+        CookieUtil.writeLoginToken(response, session.getId());
+        redisService.set(RedisPrefixKeyConst.USERNAME, session.getId(), user, Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
+        return Result.success(user);
     }
 
     @RequestMapping("/logout")
     public String doLogout(HttpServletRequest request, HttpServletResponse response) {
         String token = CookieUtil.readLoginToken(request);
-        CookieUtil.delLoginToken(request , response);
-        redisService.del(UserKey.getByName , token);
+        CookieUtil.delLoginToken(request, response);
+        redisService.del(UserKey.getByName, token);
         return "login";
     }
 }

@@ -4,12 +4,8 @@ import cn.hfbin.seckill.entity.User;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * My Blog : www.hfbin.cn
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/7/10
- * Time: 11:29
- * Such description:
+ * @Date 2022/7/24 17:02
+ * @Author zhuzhiwei
  */
 public interface UserMapper {
 

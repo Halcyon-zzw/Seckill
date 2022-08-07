@@ -5,8 +5,8 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Setter
-@Getter
+
+@Data
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor

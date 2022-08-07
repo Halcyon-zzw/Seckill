@@ -1,8 +1,7 @@
 package cn.hfbin.seckill;
 
-import cn.hfbin.seckill.bo.GoodsBo;
+import cn.hfbin.seckill.entity.bo.GoodsBo;
 import cn.hfbin.seckill.dao.GoodsMapper;
-import cn.hfbin.seckill.entity.Goods;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;

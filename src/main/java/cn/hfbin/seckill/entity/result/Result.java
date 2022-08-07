@@ -1,13 +1,12 @@
-package cn.hfbin.seckill.result;
+package cn.hfbin.seckill.entity.result;
+
+import lombok.Data;
 
 /**
- * My Blog : www.hfbin.cn
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/6/09
- * Time: 12:00
- * Such description:
+ * @Date 2022/7/24 17:06
+ * @Author zhuzhiwei
  */
+@Data
 public class Result<T> {
 
 	private int code;
@@ -18,10 +17,11 @@ public class Result<T> {
 		return this.code == CodeMsg.SUCCESS.getCode();
 	}
 	public static  <T> Result<T> success(T data){
-		return new Result<T>(data);
+		return new Result<>(data);
 	}
+
 	public static  <T> Result<T> error(CodeMsg codeMsg){
-		return new Result<T>(codeMsg);
+		return new Result<>(codeMsg);
 	}
 	private Result(T data) {
 		this.code = CodeMsg.SUCCESS.getCode();
@@ -39,23 +39,5 @@ public class Result<T> {
 			this.code = codeMsg.getCode();
 			this.msg = codeMsg.getMsg();
 		}
-	}
-	public int getCode() {
-		return code;
-	}
-	public void setCode(int code) {
-		this.code = code;
-	}
-	public String getMsg() {
-		return msg;
-	}
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
-	public T getData() {
-		return data;
-	}
-	public void setData(T data) {
-		this.data = data;
 	}
 }

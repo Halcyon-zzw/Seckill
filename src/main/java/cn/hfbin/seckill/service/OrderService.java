@@ -2,11 +2,10 @@ package cn.hfbin.seckill.service;
 
 import cn.hfbin.seckill.entity.OrderInfo;
 
+
 /**
- * Created by: HuangFuBin
- * Date: 2018/7/17
- * Time: 10:49
- * Such description:
+ * @Date 2022/7/31 16:09
+ * @Author zhuzhiwei
  */
 public interface OrderService {
 

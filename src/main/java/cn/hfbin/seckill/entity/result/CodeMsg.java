@@ -1,11 +1,7 @@
-package cn.hfbin.seckill.result;
+package cn.hfbin.seckill.entity.result;
 /**
- * My Blog : www.hfbin.cn
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/6/09
- * Time: 12:00
- * Such description:
+ * @Date 2022/7/24 16:08
+ * @Author zhuzhiwei
  */
 public class CodeMsg {
 	

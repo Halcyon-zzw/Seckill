@@ -1,12 +1,12 @@
 package cn.hfbin.seckill.entity;
 
 import lombok.*;
+import lombok.experimental.Accessors;
 
-@Setter
-@Getter
+@Data
 @ToString
-@NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class SeckillOrder {
     private Long id;
 
@@ -16,4 +16,6 @@ public class SeckillOrder {
 
     private Long goodsId;
 
+    public SeckillOrder() {
+    }
 }

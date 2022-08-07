@@ -8,11 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * github: https://github.com/hfbin
- * Created by: HuangFuBin
- * Date: 2018/5/5
- * Time: 13:32
- * Such description:
+ * @Date 2022/7/24 17:50
+ * @Author zhuzhiwei
  */
 @Slf4j
 public class CookieUtil {

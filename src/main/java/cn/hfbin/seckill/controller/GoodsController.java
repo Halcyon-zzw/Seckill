@@ -1,18 +1,16 @@
 package cn.hfbin.seckill.controller;
 
-import cn.hfbin.seckill.bo.GoodsBo;
 import cn.hfbin.seckill.common.Const;
+import cn.hfbin.seckill.common.RedisPrefixKeyConst;
 import cn.hfbin.seckill.entity.User;
-import cn.hfbin.seckill.redis.GoodsKey;
+import cn.hfbin.seckill.entity.bo.GoodsBo;
+import cn.hfbin.seckill.entity.result.CodeMsg;
+import cn.hfbin.seckill.entity.result.Result;
+import cn.hfbin.seckill.entity.vo.GoodsDetailVo;
 import cn.hfbin.seckill.redis.RedisService;
-import cn.hfbin.seckill.redis.UserKey;
-import cn.hfbin.seckill.result.CodeMsg;
-import cn.hfbin.seckill.result.Result;
 import cn.hfbin.seckill.service.SeckillGoodsService;
-import cn.hfbin.seckill.util.CookieUtil;
-import cn.hfbin.seckill.vo.GoodsDetailVo;
+import cn.hfbin.seckill.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,121 +25,77 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
- * Created by: HuangFuBin
- * Date: 2018/7/11
- * Time: 20:52
- * Such description:
+ * @Date 2022/7/31 16:09
+ * @Author zhuzhiwei
  */
-
 @Controller
 @RequestMapping("/goods")
 public class GoodsController {
 
-    @Autowired
-    RedisService redisService;
-    @Autowired
-    SeckillGoodsService seckillGoodsService;
+    private final RedisService redisService;
+    private final UserService userService;
+    private final SeckillGoodsService seckillGoodsService;
 
+    private final ThymeleafViewResolver thymeleafViewResolver;
 
-    @Autowired
-    ThymeleafViewResolver thymeleafViewResolver;
+    private final ApplicationContext applicationContext;
 
-    @Autowired
-    ApplicationContext applicationContext;
+    public GoodsController(RedisService redisService,
+                           UserService userService,
+                           SeckillGoodsService seckillGoodsService,
+                           ThymeleafViewResolver thymeleafViewResolver,
+                           ApplicationContext applicationContext) {
+        this.redisService = redisService;
+        this.userService = userService;
+        this.seckillGoodsService = seckillGoodsService;
+        this.thymeleafViewResolver = thymeleafViewResolver;
+        this.applicationContext = applicationContext;
+    }
 
     @RequestMapping("/list")
     @ResponseBody
     public String list(Model model, HttpServletRequest request, HttpServletResponse response) {
-        //修改前
-       /* List<GoodsBo> goodsList = seckillGoodsService.getSeckillGoodsList();
-         model.addAttribute("goodsList", goodsList);
-    	 return "goods_list";*/
-        //修改后
-        String html = redisService.get(GoodsKey.getGoodsList, "", String.class);
-        if(!StringUtils.isEmpty(html)) {
+        String html = redisService.get(RedisPrefixKeyConst.GOODS_LIST, "", String.class);
+        if (!StringUtils.isEmpty(html)) {
             return html;
         }
         List<GoodsBo> goodsList = seckillGoodsService.getSeckillGoodsList();
         model.addAttribute("goodsList", goodsList);
-        SpringWebContext ctx = new SpringWebContext(request,response,
-                request.getServletContext(),request.getLocale(), model.asMap(), applicationContext );
+        SpringWebContext ctx = new SpringWebContext(request, response,
+                request.getServletContext(), request.getLocale(), model.asMap(), applicationContext);
         //手动渲染
         html = thymeleafViewResolver.getTemplateEngine().process("goods_list", ctx);
-        if(!StringUtils.isEmpty(html)) {
-            redisService.set(GoodsKey.getGoodsList, "", html , Const.RedisCacheExtime.GOODS_LIST);
+        if (!StringUtils.isEmpty(html)) {
+            redisService.set(RedisPrefixKeyConst.GOODS_LIST, "", html, Const.RedisCacheExtime.GOODS_LIST);
         }
         return html;
     }
-    @RequestMapping("/to_detail2/{goodsId}")
-    @ResponseBody
-    public String detail2(Model model,
-                         @PathVariable("goodsId")long goodsId ,HttpServletRequest request  ,HttpServletResponse response  ) {
-        String loginToken = CookieUtil.readLoginToken(request);
-        User user = redisService.get(UserKey.getByName, loginToken, User.class);
-        model.addAttribute("user", user);
 
-        //取缓存
-        String html = redisService.get(GoodsKey.getGoodsDetail, ""+goodsId, String.class);
-        if(!StringUtils.isEmpty(html)) {
-            return html;
-        }
-        GoodsBo goods = seckillGoodsService.getseckillGoodsBoByGoodsId(goodsId);
-        if(goods == null){
-            return "没有找到该页面";
-        }else {
-            model.addAttribute("goods", goods);
-            long startAt = goods.getStartDate().getTime();
-            long endAt = goods.getEndDate().getTime();
-            long now = System.currentTimeMillis();
-
-            int miaoshaStatus = 0;
-            int remainSeconds = 0;
-            if(now < startAt ) {//秒杀还没开始，倒计时
-                miaoshaStatus = 0;
-                remainSeconds = (int)((startAt - now )/1000);
-            }else  if(now > endAt){//秒杀已经结束
-                miaoshaStatus = 2;
-                remainSeconds = -1;
-            }else {//秒杀进行中
-                miaoshaStatus = 1;
-                remainSeconds = 0;
-            }
-            model.addAttribute("seckillStatus", miaoshaStatus);
-            model.addAttribute("remainSeconds", remainSeconds);
-            SpringWebContext ctx = new SpringWebContext(request,response,
-                    request.getServletContext(),request.getLocale(), model.asMap(), applicationContext );
-            html = thymeleafViewResolver.getTemplateEngine().process("goods_detail", ctx);
-            if(!StringUtils.isEmpty(html)) {
-                redisService.set(GoodsKey.getGoodsDetail, ""+goodsId, html , Const.RedisCacheExtime.GOODS_INFO);
-            }
-            return html;
-        }
-    }
     @RequestMapping("/detail/{goodsId}")
     @ResponseBody
     public Result<GoodsDetailVo> detail(Model model,
-                                        @PathVariable("goodsId")long goodsId , HttpServletRequest request  ) {
-        String loginToken = CookieUtil.readLoginToken(request);
-        User user = redisService.get(UserKey.getByName, loginToken, User.class);
+                                        @PathVariable("goodsId") long goodsId,
+                                        HttpServletRequest request) {
+        User user = userService.getUserByRequest(request);
 
         GoodsBo goods = seckillGoodsService.getseckillGoodsBoByGoodsId(goodsId);
-        if(goods == null){
+        if (goods == null) {
             return Result.error(CodeMsg.NO_GOODS);
-        }else {
+        } else {
             model.addAttribute("goods", goods);
             long startAt = goods.getStartDate().getTime();
             long endAt = goods.getEndDate().getTime();
             long now = System.currentTimeMillis();
 
-            int miaoshaStatus = 0;
-            int remainSeconds = 0;
-            if(now < startAt ) {//秒杀还没开始，倒计时
+            int miaoshaStatus;
+            int remainSeconds;
+            if (now < startAt) {//秒杀还没开始，倒计时
                 miaoshaStatus = 0;
-                remainSeconds = (int)((startAt - now )/1000);
-            }else  if(now > endAt){//秒杀已经结束
+                remainSeconds = (int) ((startAt - now) / 1000);
+            } else if (now > endAt) {//秒杀已经结束
                 miaoshaStatus = 2;
                 remainSeconds = -1;
-            }else {//秒杀进行中
+            } else {//秒杀进行中
                 miaoshaStatus = 1;
                 remainSeconds = 0;
             }
