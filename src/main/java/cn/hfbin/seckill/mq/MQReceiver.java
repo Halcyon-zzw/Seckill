@@ -29,7 +29,7 @@ public class MQReceiver {
     public void receive(String message) {
         LOGGER.info("receive message:" + message);
         SeckillMessage mm = RedisService.stringToBean(message, SeckillMessage.class);
-        User user = mm.getUser();
+        long userId = mm.getUserId();
         long goodsId = mm.getGoodsId();
 
         GoodsBo goods = goodsService.getseckillGoodsBoByGoodsId(goodsId);
@@ -38,11 +38,11 @@ public class MQReceiver {
             return;
         }
         //判断是否已经秒杀到了
-        SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(user.getId(), goodsId);
+        SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(userId, goodsId);
         if (order != null) {
             return;
         }
         //减库存 下订单 写入秒杀订单
-        seckillOrderService.insert(user, goods);
+        seckillOrderService.insert(userId, goods);
     }
 }

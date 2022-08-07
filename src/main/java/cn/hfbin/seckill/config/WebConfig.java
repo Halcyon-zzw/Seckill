@@ -17,7 +17,7 @@ import javax.servlet.Filter;
  * @Date 2022/7/31 16:16
  * @Author zhuzhiwei
  */
-@Configuration
+//@Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
     @Autowired
     private AccessLimitInterceptor accessLimitInterceptor;

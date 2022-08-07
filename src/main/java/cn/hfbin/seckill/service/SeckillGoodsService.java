@@ -1,6 +1,8 @@
 package cn.hfbin.seckill.service;
 
+import cn.hfbin.seckill.entity.SeckillGoods;
 import cn.hfbin.seckill.entity.bo.GoodsBo;
+import cn.hfbin.seckill.entity.dto.ProductDeployRequest;
 
 import java.util.List;
 
@@ -16,4 +18,6 @@ public interface SeckillGoodsService {
     GoodsBo getseckillGoodsBoByGoodsId(long goodsId);
 
     int reduceStock(long goodsId);
+
+    SeckillGoods deployProduct(ProductDeployRequest productDeployRequest);
 }

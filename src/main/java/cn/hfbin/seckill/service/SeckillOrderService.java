@@ -15,14 +15,9 @@ public interface SeckillOrderService {
     SeckillOrder getSeckillOrderByUserIdGoodsId(long userId , long goodsId);
 
 
-    OrderInfo insert(User user , GoodsBo goodsBo);
+    OrderInfo insert(long userId, GoodsBo goodsBo);
 
     OrderInfo getOrderInfo(long orderId);
 
     long getSeckillResult(Long userId, long goodsId);
-
-    boolean checkPath(User user, long goodsId, String path);
-
-    String createSecKillPath(User user, long goodsId);
-
 }

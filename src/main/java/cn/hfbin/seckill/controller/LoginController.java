@@ -6,7 +6,6 @@ import cn.hfbin.seckill.entity.User;
 import cn.hfbin.seckill.entity.result.Result;
 import cn.hfbin.seckill.param.LoginParam;
 import cn.hfbin.seckill.redis.RedisService;
-import cn.hfbin.seckill.redis.UserKey;
 import cn.hfbin.seckill.service.UserService;
 import cn.hfbin.seckill.util.CookieUtil;
 import org.springframework.stereotype.Controller;
@@ -47,7 +46,7 @@ public class LoginController {
     public String doLogout(HttpServletRequest request, HttpServletResponse response) {
         String token = CookieUtil.readLoginToken(request);
         CookieUtil.delLoginToken(request, response);
-        redisService.del(UserKey.getByName, token);
+        redisService.del(RedisPrefixKeyConst.USERNAME, token);
         return "login";
     }
 }

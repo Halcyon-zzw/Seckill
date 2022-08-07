@@ -23,4 +23,13 @@ public class Const {
         int SECKILL_PATH = 60;
         int GOODS_INFO = 60;
     }
+
+    /**
+     * 获取秒杀结果轮询的间隔
+     */
+    public static final long POLL_SLEEP_TIME = 500;
+    /**
+     * 轮询持续的时间
+     */
+    public static final long POLL_CONTINUE_TIME = 1000 * 60 * 5;
 }

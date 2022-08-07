@@ -10,14 +10,14 @@ import lombok.Data;
  */
 @Data
 public class SeckillMessage {
-	private User user;
+	private long userId;
 	private long goodsId;
 
 	public SeckillMessage() {
 	}
 
-	public SeckillMessage(User user, long goodsId) {
-		this.user = user;
+	public SeckillMessage(long userId, long goodsId) {
+		this.userId = userId;
 		this.goodsId = goodsId;
 	}
 }

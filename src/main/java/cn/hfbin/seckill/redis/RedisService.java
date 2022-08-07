@@ -1,7 +1,6 @@
 package cn.hfbin.seckill.redis;
 
 import com.alibaba.fastjson.JSON;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -14,8 +13,11 @@ import redis.clients.jedis.JedisPool;
 @Service
 public class RedisService {
 
-    @Autowired
-    private JedisPool jedisPool;
+    private final JedisPool jedisPool;
+
+    public RedisService(JedisPool jedisPool) {
+        this.jedisPool = jedisPool;
+    }
 
     public <T> T get(String key, Class<T> clazz) {
         Jedis jedis = null;
@@ -36,11 +38,11 @@ public class RedisService {
         return get(prefix + key, clazz);
     }
 
-    public Long expice(KeyPrefix prefix, String key, int exTime) {
+    public Long expice(String prefix, String key, int exTime) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            return jedis.expire(prefix.getPrefix() + key, exTime);
+            return jedis.expire(prefix + key, exTime);
         } finally {
             returnToPool(jedis);
         }
@@ -77,11 +79,11 @@ public class RedisService {
         }
     }
 
-    public Long del(KeyPrefix prefix, String key) {
+    public Long del(String prefix, String key) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            return jedis.del(prefix.getPrefix() + key);
+            return jedis.del(prefix + key);
         } finally {
             returnToPool(jedis);
         }
@@ -90,12 +92,12 @@ public class RedisService {
     /**
      * 判断key是否存在
      */
-    public boolean exists(KeyPrefix prefix, String key) {
+    public boolean exists(String prefix, String key) {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
             //生成真正的key
-            String realKey = prefix.getPrefix() + key;
+            String realKey = prefix + key;
             return jedis.exists(realKey);
         } finally {
             returnToPool(jedis);
@@ -109,9 +111,7 @@ public class RedisService {
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            //生成真正的key
-            String realKey = prefix + key;
-            return jedis.incr(realKey);
+            return jedis.incr(prefix + key);
         } finally {
             returnToPool(jedis);
         }
@@ -120,12 +120,11 @@ public class RedisService {
     /**
      * 减少值
      */
-    public Long decr(KeyPrefix prefix, String key) {
+    public Long decr(String prefix, String key) {
         Jedis jedis = null;
         try {
-            jedis =  jedisPool.getResource();
-            String redisKey = prefix.getPrefix() + key;
-            return jedis.decr(redisKey);
+            jedis = jedisPool.getResource();
+            return jedis.decr(prefix + key);
         } finally {
             returnToPool(jedis);
         }
@@ -153,7 +152,7 @@ public class RedisService {
     /**
      * string转bean
      *
-     * @param str json
+     * @param str   json
      * @param clazz class
      * @return 实例对象
      */

@@ -10,7 +10,6 @@ import cn.hfbin.seckill.entity.bo.GoodsBo;
 import cn.hfbin.seckill.entity.result.CodeMsg;
 import cn.hfbin.seckill.exception.SecKillException;
 import cn.hfbin.seckill.redis.RedisService;
-import cn.hfbin.seckill.redis.SeckillKey;
 import cn.hfbin.seckill.service.OrderService;
 import cn.hfbin.seckill.service.SeckillGoodsService;
 import cn.hfbin.seckill.service.SeckillOrderService;
@@ -56,7 +55,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     @Transactional
     @Override
-    public OrderInfo insert(User user, GoodsBo goods) {
+    public OrderInfo insert(long userId, GoodsBo goods) {
         //秒杀商品库存减一
         int success = seckillGoodsService.reduceStock(goods.getId());
         if (success == 1) {
@@ -69,14 +68,14 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
                     .setGoodsPrice(goods.getSeckillPrice())
                     .setOrderChannel(1)
                     .setStatus(0)
-                    .setUserId((long) user.getId());
+                    .setUserId(userId);
             //添加信息进订单
             long orderId = orderService.addOrder(orderInfo);
             log.info("orderId -->" + orderId + "");
             SeckillOrder seckillOrder = new SeckillOrder()
                     .setGoodsId(goods.getId())
                     .setOrderId(orderInfo.getId())
-                    .setUserId((long) user.getId());
+                    .setUserId(userId);
             //插入秒杀表
             seckillOrderMapper.insertSelective(seckillOrder);
             return orderInfo;
@@ -101,33 +100,15 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     public long getSeckillResult(Long userId, long goodsId) {
         SeckillOrder order = getSeckillOrderByUserIdGoodsId(userId, goodsId);
-        if (order != null) {//秒杀成功
+        if (order != null) {
+            //秒杀成功
             return order.getOrderId();
+        }
+        if (isGoodsOver(goodsId)) {
+            return -1;
         } else {
-            boolean isOver = getGoodsOver(goodsId);
-            if (isOver) {
-                return -1;
-            } else {
-                return 0;
-            }
+            return 0;
         }
-    }
-
-    public boolean checkPath(User user, long goodsId, String path) {
-        if (user == null || path == null) {
-            return false;
-        }
-        String pathOld = redisService.get(RedisPrefixKeyConst.SECKILL_PATH, user.getId() + "_" + goodsId, String.class);
-        return StringUtils.equals(path, pathOld);
-    }
-
-    public String createSecKillPath(User user, long goodsId) {
-        if (user == null || goodsId <= 0) {
-            return null;
-        }
-        String path = UUID.randomUUID().toString() + goodsId;
-        redisService.set(RedisPrefixKeyConst.SECKILL_PATH, user.getId() + "_" + goodsId, path, Const.RedisCacheExtime.GOODS_ID);
-        return path;
     }
 
     /*
@@ -140,8 +121,8 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     /*
      * 查看秒杀商品是否已经结束
      * */
-    private boolean getGoodsOver(long goodsId) {
-        return redisService.exists(SeckillKey.isGoodsOver, String.valueOf(goodsId));
+    private boolean isGoodsOver(long goodsId) {
+        return redisService.exists(RedisPrefixKeyConst.GOODS_OVER, String.valueOf(goodsId));
     }
 
 }

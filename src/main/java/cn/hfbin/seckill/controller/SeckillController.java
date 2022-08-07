@@ -1,27 +1,42 @@
 package cn.hfbin.seckill.controller;
 
-import cn.hfbin.seckill.annotations.AccessLimit;
 import cn.hfbin.seckill.common.Const;
 import cn.hfbin.seckill.common.RedisPrefixKeyConst;
+import cn.hfbin.seckill.common.SeckillConst;
+import cn.hfbin.seckill.entity.Goods;
+import cn.hfbin.seckill.entity.SeckillGoods;
 import cn.hfbin.seckill.entity.SeckillOrder;
-import cn.hfbin.seckill.entity.User;
 import cn.hfbin.seckill.entity.bo.GoodsBo;
+import cn.hfbin.seckill.entity.dto.ProductDeplouResponse;
+import cn.hfbin.seckill.entity.dto.ProductDeployRequest;
+import cn.hfbin.seckill.entity.dto.SeckillRequest;
+import cn.hfbin.seckill.entity.dto.SeckillResponse;
 import cn.hfbin.seckill.entity.result.CodeMsg;
-import cn.hfbin.seckill.entity.result.Result;
 import cn.hfbin.seckill.exception.SecKillException;
+import cn.hfbin.seckill.exception.SecKillExceptionHandler;
 import cn.hfbin.seckill.mq.MQSender;
 import cn.hfbin.seckill.mq.SeckillMessage;
-import cn.hfbin.seckill.redis.GoodsKey;
 import cn.hfbin.seckill.redis.RedisService;
 import cn.hfbin.seckill.service.SeckillGoodsService;
 import cn.hfbin.seckill.service.SeckillOrderService;
 import cn.hfbin.seckill.service.UserService;
-import org.springframework.web.bind.annotation.*;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+
+import static cn.hfbin.seckill.common.Const.POLL_SLEEP_TIME;
 
 /**
  * @Description 秒杀Controller
@@ -29,16 +44,13 @@ import java.util.List;
  * @Author zhuzhiwei
  */
 @RestController
-@RequestMapping("seckill")
+@RequestMapping("/product")
 public class SeckillController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecKillExceptionHandler.class);
 
-    private final UserService userService;
     private final RedisService redisService;
-
     private final SeckillGoodsService seckillGoodsService;
-
     private final SeckillOrderService seckillOrderService;
-
     private final MQSender mqSender;
 
     /**
@@ -46,12 +58,10 @@ public class SeckillController {
      */
     private final HashMap<Long, Boolean> localOverMap = new HashMap<>(128);
 
-    public SeckillController(UserService userService,
-                             RedisService redisService,
+    public SeckillController(RedisService redisService,
                              SeckillGoodsService seckillGoodsService,
                              SeckillOrderService seckillOrderService,
                              MQSender mqSender) {
-        this.userService = userService;
         this.redisService = redisService;
         this.seckillGoodsService = seckillGoodsService;
         this.seckillOrderService = seckillOrderService;
@@ -74,75 +84,97 @@ public class SeckillController {
         });
     }
 
-
-    @PostMapping(value = "/{path}/seckill")
-    public Result<Integer> list(@RequestParam("goodsId") long goodsId,
-                                @PathVariable("path") String path,
-                                HttpServletRequest request) {
-        User user = userService.getUserByRequest(request);
-        checkSecKill(goodsId, path, user);
-        //预减库存
-        long stock = redisService.decr(GoodsKey.getSeckillGoodsStock, String.valueOf(goodsId));
-        if (stock < 0) {
-            localOverMap.put(goodsId, true);
-            return Result.error(CodeMsg.MIAO_SHA_OVER);
+    @PostMapping(value = "/deploy")
+    public ProductDeplouResponse seckillDeploy(@RequestBody ProductDeployRequest productDeployRequest) {
+        final ProductDeplouResponse productDeplouResponse = checkParam(productDeployRequest);
+        if (productDeplouResponse != null) {
+            return productDeplouResponse;
         }
-        //判断是否已经秒杀到了
-        SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(user.getId(), goodsId);
-        if (order != null) {
-            return Result.error(CodeMsg.REPEATE_MIAOSHA);
-        }
-        //入队
-        mqSender.sendSeckillMessage(new SeckillMessage(user, goodsId));
-        return Result.success(0);
+        final SeckillGoods seckillGoods = seckillGoodsService.deployProduct(productDeployRequest);
+        return ProductDeplouResponse.success(seckillGoods.getId());
     }
 
+    private ProductDeplouResponse checkParam(ProductDeployRequest productDeployRequest) {
+        Long productId = productDeployRequest.getProductId();
+        Integer productAmount = productDeployRequest.getProductAmount();
+        final String startDateTime = productDeployRequest.getStartDateTime();
+        try {
+            Date startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startDateTime);
+        } catch (ParseException e) {
+            return ProductDeplouResponse.fail("开始时间参数格式有误");
+        }
+        if (productId < 0) {
+            return ProductDeplouResponse.fail("商品id不能为负数");
+        }
+        if (productAmount <= 0) {
+            return ProductDeplouResponse.fail("秒杀数量必须为正数");
+        }
+        return null;
+    }
+
+
+    @PostMapping(value = "/seckill")
+    public SeckillResponse seckillProduct(@RequestBody SeckillRequest seckillRequest) {
+        Long userId = seckillRequest.getUserId();
+        Long productId = seckillRequest.getEventId();
+        String msg = checkSecKill(productId);
+        if (StringUtils.isNotEmpty(msg)) {
+            return SeckillResponse.fail(msg);
+        }
+        //预减库存
+        long stock = redisService.decr(RedisPrefixKeyConst.GOODS_STOCK, productId.toString());
+        if (stock < 0) {
+            localOverMap.put(userId, true);
+            return SeckillResponse.fail(SeckillConst.SECKILL_OVER);
+        }
+        //判断是否重复秒杀
+        SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(userId, productId);
+        if (order != null) {
+            return SeckillResponse.fail(SeckillConst.SECKILL_REPEATE);
+        }
+        //入队
+        mqSender.sendSeckillMessage(new SeckillMessage(userId, productId));
+        return seckillResult(userId, productId);
+    }
+
+
     /**
-     * 验证链接及商品是否秒杀结束
+     * 验证商品是否秒杀结束
      *
      * @param goodsId 商品id
-     * @param path    商品链接
-     * @param user    用户
      */
-    private void checkSecKill(long goodsId, String path, User user) {
-        //验证path
-        boolean check = seckillOrderService.checkPath(user, goodsId, path);
-        if (!check) {
-            throw new SecKillException(CodeMsg.REQUEST_ILLEGAL);
+    private String checkSecKill(long goodsId) {
+        //TODO 加入布隆过滤器
+        if (goodsId < 0) {
+            return SeckillConst.NO_PRODUCT;
         }
         boolean over = localOverMap.getOrDefault(goodsId, false);
         if (over) {
-            throw new SecKillException(CodeMsg.MIAO_SHA_OVER);
+            return SeckillConst.SECKILL_OVER;
+        }
+        return null;
+    }
+
+
+    public SeckillResponse seckillResult(long userId, long productId) {
+        while (true) {
+            long result = seckillOrderService.getSeckillResult(userId, productId);
+            if (result > 0) {
+                return SeckillResponse.success();
+            } else if (result < 0) {
+                return SeckillResponse.fail(SeckillConst.SECKILL_OVER);
+            } else {
+                try {
+                    Thread.sleep(POLL_SLEEP_TIME);
+                } catch (InterruptedException e) {
+                    LOGGER.error("", e);
+                }
+            }
         }
     }
 
-    /**
-     * 客户端轮询查询是否下单成功
-     * orderId：成功
-     * -1：秒杀失败
-     * 0： 排队中
-     */
-    @GetMapping(value = "/result")
-    @ResponseBody
-    public Result<Long> miaoshaResult(@RequestParam("goodsId") long goodsId, HttpServletRequest request) {
-        User user = userService.getUserByRequest(request);
-        long result = seckillOrderService.getSeckillResult((long) user.getId(), goodsId);
-        return Result.success(result);
-    }
 
-
-    /**
-     * 动态生成秒杀的链接
-     *
-     * @param request request
-     * @param goodsId 商品id
-     * @return 动态链接
-     */
-    @AccessLimit(seconds = 5, maxCount = 5)
-    @GetMapping(value = "/path")
-    public Result<String> getSecKillPath(HttpServletRequest request, @RequestParam("goodsId") long goodsId) {
-        User user = userService.getUserByRequest(request);
-        String path = seckillOrderService.createSecKillPath(user, goodsId);
-        return Result.success(path);
+    private CodeMsg getParamError(String param) {
+        return new CodeMsg(500101, "参数有误：" + param);
     }
 }
