@@ -90,7 +90,12 @@ public class SeckillController {
         if (productDeplouResponse != null) {
             return productDeplouResponse;
         }
-        final SeckillGoods seckillGoods = seckillGoodsService.deployProduct(productDeployRequest);
+        final SeckillGoods seckillGoods;
+        try {
+            seckillGoods = seckillGoodsService.deployProduct(productDeployRequest);
+        } catch (Exception e) {
+            return ProductDeplouResponse.fail(SeckillConst.SERVER_ERROR);
+        }
         return ProductDeplouResponse.success(seckillGoods.getId());
     }
 
@@ -99,7 +104,7 @@ public class SeckillController {
         Integer productAmount = productDeployRequest.getProductAmount();
         final String startDateTime = productDeployRequest.getStartDateTime();
         try {
-            Date startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startDateTime);
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startDateTime);
         } catch (ParseException e) {
             return ProductDeplouResponse.fail("开始时间参数格式有误");
         }
@@ -116,6 +121,7 @@ public class SeckillController {
     @PostMapping(value = "/seckill")
     public SeckillResponse seckillProduct(@RequestBody SeckillRequest seckillRequest) {
         Long userId = seckillRequest.getUserId();
+        //TODO 转productId
         Long productId = seckillRequest.getEventId();
         String msg = checkSecKill(productId);
         if (StringUtils.isNotEmpty(msg)) {

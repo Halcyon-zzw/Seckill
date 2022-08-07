@@ -26,6 +26,7 @@ public class ProductDeplouResponse<T> {
     public ProductDeplouResponse(String statusCode, T data) {
         this.statusCode = statusCode;
         this.data = data;
+        this.statusMsg = "";
     }
 
     public static <T> ProductDeplouResponse success(T data) {

@@ -28,7 +28,7 @@ import java.util.Map;
  * @Date 2022/8/6 23:19
  * @Author zhuzhiwei
  */
-@Component
+//@Component
 public class AccessLimitInterceptor implements HandlerInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessLimitInterceptor.class);
 

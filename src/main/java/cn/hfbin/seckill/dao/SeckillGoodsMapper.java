@@ -11,6 +11,8 @@ public interface SeckillGoodsMapper {
 
     SeckillGoods selectByPrimaryKey(Long id);
 
+    SeckillGoods selectByGoodsId(Long id);
+
     int updateByPrimaryKeySelective(SeckillGoods record);
 
     int updateByPrimaryKey(SeckillGoods record);

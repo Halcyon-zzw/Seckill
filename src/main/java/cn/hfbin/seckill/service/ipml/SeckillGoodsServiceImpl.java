@@ -6,10 +6,12 @@ import cn.hfbin.seckill.entity.Goods;
 import cn.hfbin.seckill.entity.SeckillGoods;
 import cn.hfbin.seckill.entity.bo.GoodsBo;
 import cn.hfbin.seckill.entity.dto.ProductDeployRequest;
+import cn.hfbin.seckill.exception.SecKillException;
 import cn.hfbin.seckill.service.SeckillGoodsService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -49,28 +51,46 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 
     @Override
     public SeckillGoods deployProduct(ProductDeployRequest productDeployRequest) {
-        Goods goods = new Goods()
-                .setId(productDeployRequest.getProductId())
-                .setGoodsStock(productDeployRequest.getProductAmount() + 10000)
-                .setGoodsImg(DEFAULT)
-                .setGoodsDetail(DEFAULT)
-                .setGoodsName(DEFAULT)
-                .setGoodsPrice(new BigDecimal(0.0))
-                .setGoodsTitle(DEFAULT)
-                .setCreateDate(new Date())
-                .setUpdateDate(new Date());
 
-        Date startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(productDeployRequest.getStartDateTime());
-        Date endDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2022-12-31 12:00:00");
+        final Goods alreadyGoods = goodsMapper.selectByPrimaryKey(productDeployRequest.getProductId());
+        if (alreadyGoods == null) {
+            Goods goods = new Goods()
+                    .setId(productDeployRequest.getProductId())
+                    .setGoodsStock(productDeployRequest.getProductAmount() + 10000)
+                    .setGoodsImg(DEFAULT)
+                    .setGoodsDetail(DEFAULT)
+                    .setGoodsName(DEFAULT)
+                    .setGoodsPrice(new BigDecimal(0.0))
+                    .setGoodsTitle(DEFAULT)
+                    .setCreateDate(new Date())
+                    .setUpdateDate(new Date());
+            goodsMapper.insertSelective(goods);
+        }
+
+
+        Date startDate = null;
+        Date endDate = null;
+
+        try {
+            startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(productDeployRequest.getStartDateTime());
+            endDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2022-12-31 12:00:00");
+        } catch (ParseException e) {
+            throw new SecKillException("开始时间有误：" + productDeployRequest.getStartDateTime());
+        }
         SeckillGoods seckillGoods = new SeckillGoods()
                 .setGoodsId(productDeployRequest.getProductId())
                 .setStockCount(productDeployRequest.getProductAmount())
                 .setSeckilPrice(new BigDecimal(0.0))
                 .setStartDate(startDate)
                 .setEndDate(endDate);
-        goodsMapper.insertSelective(goods);
-        seckillGoodsMapper.insertSelective(seckillGoods);
 
+        final SeckillGoods alreadySeckillGoods = seckillGoodsMapper.selectByGoodsId(productDeployRequest.getProductId());
+        if (alreadySeckillGoods != null) {
+            seckillGoods.setId(alreadySeckillGoods.getId());
+            seckillGoodsMapper.updateByPrimaryKeySelective(seckillGoods);
+        } else {
+            seckillGoodsMapper.insertSelective(seckillGoods);
+        }
         return seckillGoods;
     }
 }

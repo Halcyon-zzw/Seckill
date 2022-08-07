@@ -20,6 +20,13 @@
     from seckill_goods
     where id = #{id,jdbcType=BIGINT}
   </select>
+  <select id="selectByGoodsId" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from seckill_goods
+    where goods_id = #{goods_id,jdbcType=BIGINT}
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
     delete from seckill_goods
     where id = #{id,jdbcType=BIGINT}
@@ -32,7 +39,7 @@
       #{stockCount,jdbcType=INTEGER}, #{startDate,jdbcType=TIMESTAMP}, #{endDate,jdbcType=TIMESTAMP}
       )
   </insert>
-  <insert id="insertSelective" parameterType="cn.hfbin.seckill.entity.SeckillGoods" >
+  <insert id="insertSelective" parameterType="cn.hfbin.seckill.entity.SeckillGoods"  useGeneratedKeys="true" keyProperty="id">
     insert into seckill_goods
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >

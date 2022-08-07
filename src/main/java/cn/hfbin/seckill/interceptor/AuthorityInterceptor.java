@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
  * @Date 2022/8/6 23:19
  * @Author zhuzhiwei
  */
-@Component
+//@Component
 public class AuthorityInterceptor implements HandlerInterceptor {
 
     private final RedisService redisService;

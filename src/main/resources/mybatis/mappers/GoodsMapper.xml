@@ -75,7 +75,7 @@
       #{createDate,jdbcType=TIMESTAMP}, #{updateDate,jdbcType=TIMESTAMP}, #{goodsDetail,jdbcType=LONGVARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="cn.hfbin.seckill.entity.Goods" >
+  <insert id="insertSelective" parameterType="cn.hfbin.seckill.entity.Goods"  useGeneratedKeys="true" keyProperty="id">
     insert into goods
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -212,7 +212,7 @@
     WHERE  goods.id = #{goodsId}
   </select>
 
-  <update id="updateStock" parameterType="long" >
+  <update id="decrStock" parameterType="long" >
     UPDATE seckill_goods
     SET stock_count = stock_count -1
     WHERE goods_id = #{goodsId}
