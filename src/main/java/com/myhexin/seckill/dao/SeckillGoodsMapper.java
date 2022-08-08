@@ -2,6 +2,8 @@ package com.myhexin.seckill.dao;
 
 import com.myhexin.seckill.entity.SeckillGoods;
 
+import java.util.List;
+
 public interface SeckillGoodsMapper {
     int deleteByPrimaryKey(Long id);
 
@@ -16,4 +18,6 @@ public interface SeckillGoodsMapper {
     int updateByPrimaryKeySelective(SeckillGoods record);
 
     int updateByPrimaryKey(SeckillGoods record);
+
+    List<SeckillGoods> selectAllSeckillGoods();
 }

@@ -58,19 +58,19 @@ public class SeckillController {
         this.mqSender = mqSender;
     }
 
-
     /**
      * 系统初始化
      */
     @PostConstruct
     public void cache() {
-        List<GoodsBo> goodsList = seckillGoodsService.getSeckillGoodsList();
-        if (goodsList == null) {
+        List<SeckillGoods> seckillGoodsList = seckillGoodsService.getSeckillGoodsList();
+        if (seckillGoodsList == null) {
             return;
         }
-        goodsList.forEach(goods -> {
-            redisService.set(RedisPrefixKeyConst.GOODS_STOCK, goods.getId().toString(), goods.getStockCount(), Const.RedisCacheExtime.GOODS_LIST);
-            localOverMap.put(goods.getId(), false);
+        seckillGoodsList.forEach(goods -> {
+            Long eventId = goods.getId();
+            redisService.set(RedisPrefixKeyConst.GOODS_STOCK, eventId.toString(), goods.getStockCount(), Const.RedisCacheExtime.GOODS_LIST);
+            localOverMap.put(eventId, false);
         });
     }
 
@@ -85,20 +85,26 @@ public class SeckillController {
         } catch (Exception e) {
             return ProductDeplouResponse.fail(SeckillConst.SERVER_ERROR);
         }
-        String productIdStr = seckillGoods.getGoodsId().toString();
-        redisService.set(RedisPrefixKeyConst.GOODS_STOCK, productIdStr, seckillGoods.getStockCount(), Const.RedisCacheExtime.GOODS_LIST);
+        String eventIdStr = seckillGoods.getId().toString();
+        redisService.set(RedisPrefixKeyConst.GOODS_STOCK, eventIdStr, seckillGoods.getStockCount(), Const.RedisCacheExtime.GOODS_LIST);
         return ProductDeplouResponse.success(new SeckillEvent(seckillGoods.getId()));
     }
 
 
     @PostMapping(value = "/seckill")
     public SeckillResponse seckillProduct(@RequestParam("event_id") Long eventId, @RequestParam("user_id") Long userId) {
+        //秒杀商品缓存用不过期，不用考虑过期情况。（可定期删除过期数据）
+        String eventIdStr = eventId.toString();
+        if (redisService.get(RedisPrefixKeyConst.GOODS_STOCK, eventIdStr) == null) {
+            throw new SecKillException(SeckillConst.NO_PRODUCT);
+        }
         SeckillGoods seckillGoods = seckillGoodsService.getByEventId(eventId);
         Date startDate = seckillGoods.getStartDate();
         Long productId = seckillGoods.getGoodsId();
         checkSecKill(startDate, productId);
+
         //预减库存
-        long stock = redisService.decr(RedisPrefixKeyConst.GOODS_STOCK, productId.toString());
+        long stock = redisService.decr(RedisPrefixKeyConst.GOODS_STOCK, eventIdStr);
         if (stock < 0) {
             localOverMap.put(userId, true);
             return SeckillResponse.fail(SeckillConst.SECKILL_OVER);
@@ -106,7 +112,7 @@ public class SeckillController {
         //判断是否重复秒杀
         SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(userId, productId);
         if (order != null) {
-            redisService.incr(RedisPrefixKeyConst.GOODS_STOCK, productId.toString());
+            redisService.incr(RedisPrefixKeyConst.GOODS_STOCK, eventIdStr);
             localOverMap.put(userId, false);
             return SeckillResponse.fail(SeckillConst.SECKILL_REPEATE);
         }
@@ -137,11 +143,11 @@ public class SeckillController {
      * @param goodsId 商品id
      */
     private void checkSecKill(Date startDate, long goodsId) {
-        boolean over = localOverMap.getOrDefault(goodsId, false);
         Date nowDate = new Date();
         if (nowDate.getTime() < startDate.getTime()) {
             throw new SecKillException(SeckillConst.SECKILL_NOT_START);
         }
+        boolean over = localOverMap.getOrDefault(goodsId, false);
         if (over) {
             throw new SecKillException(SeckillConst.SECKILL_OVER);
         }

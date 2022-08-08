@@ -9,32 +9,32 @@ import java.util.Date;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsBo{
+public class GoodsBo {
 
-	private BigDecimal seckillPrice;
+    private BigDecimal seckillPrice;
 
-	private Integer stockCount;
+    private Integer stockCount;
 
-	private Date startDate;
+    private Date startDate;
 
-	private Date endDate;
+    private Date endDate;
 
-	private Long id;
+    private Long id;
 
-	private String goodsName;
+    private String goodsName;
 
-	private String goodsTitle;
+    private String goodsTitle;
 
-	private String goodsImg;
+    private String goodsImg;
 
-	private BigDecimal goodsPrice;
+    private BigDecimal goodsPrice;
 
-	private Integer goodsStock;
+    private Integer goodsStock;
 
-	private Date createDate;
+    private Date createDate;
 
-	private Date updateDate;
+    private Date updateDate;
 
-	private String goodsDetail;
+    private String goodsDetail;
 
 }

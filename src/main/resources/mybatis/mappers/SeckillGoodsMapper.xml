@@ -112,4 +112,10 @@
       end_date = #{endDate,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
+
+  <select id="selectAllSeckillGoods" resultMap="BaseResultMap">
+    select
+      id, goods_id, seckil_price, stock_count, start_date, end_date
+    from seckill_goods
+  </select>
 </mapper>

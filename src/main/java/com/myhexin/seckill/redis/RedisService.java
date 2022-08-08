@@ -38,6 +38,13 @@ public class RedisService {
         return get(prefix + key, clazz);
     }
 
+    /**
+     * 获取当个对象
+     */
+    public String get(String prefix, String key) {
+        return get(prefix + key, String.class);
+    }
+
     public Long expice(String prefix, String key, int exTime) {
         Jedis jedis = null;
         try {

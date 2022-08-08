@@ -13,9 +13,9 @@ public class Const {
          */
         int REDIS_SESSION_EXTIME = 60 * 30;
         /**
-         * 12小时
+         * 0表示永不过期
          */
-        int GOODS_LIST = 60 * 60 * 12;
+        int GOODS_LIST = 0;
         /**
          * 1分钟
          */

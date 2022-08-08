@@ -5,6 +5,7 @@
 -- Server version	5.7.19
 
 
+create database seckill;
 --
 -- Table - `goods`
 --

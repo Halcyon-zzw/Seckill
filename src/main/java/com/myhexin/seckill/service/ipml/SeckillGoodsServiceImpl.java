@@ -34,8 +34,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     }
 
     @Override
-    public List<GoodsBo> getSeckillGoodsList() {
-        return goodsMapper.selectAllGoodes();
+    public List<SeckillGoods> getSeckillGoodsList() {
+        return seckillGoodsMapper.selectAllSeckillGoods();
     }
 
     @Override

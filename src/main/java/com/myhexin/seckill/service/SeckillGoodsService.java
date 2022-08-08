@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface SeckillGoodsService {
 
-    List<GoodsBo> getSeckillGoodsList();
+    List<SeckillGoods> getSeckillGoodsList();
 
     GoodsBo getseckillGoodsBoByGoodsId(long goodsId);
 

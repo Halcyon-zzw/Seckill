@@ -14,6 +14,4 @@ public class RedisPrefixKeyConst {
 
     public static String GOODS_OVER = "go_";
     public static String SECKILL_PATH = "sc_path_";
-    public static String USER_ID = "user_id_";
-    public static String USERNAME = "username_";
 }
