@@ -20,14 +20,14 @@ public class Const {
          * 1分钟
          */
         int GOODS_ID = 60;
-        int SECKILL_PATH = 60;
+        int USER_ORDER = 60 * 3;
         int GOODS_INFO = 60;
     }
 
     /**
      * 获取秒杀结果轮询的间隔
      */
-    public static final long POLL_SLEEP_TIME = 500;
+    public static final long POLL_SLEEP_TIME = 50;
     /**
      * 轮询持续的时间
      */

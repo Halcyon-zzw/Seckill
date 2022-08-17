@@ -73,6 +73,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
                     .setGoodsId(goods.getId())
                     .setOrderId(orderInfo.getId())
                     .setUserId(userId);
+            redisService.set(RedisPrefixKeyConst.GOODS_USER_ORDER, userId + "_" + goods.getId(), "success", Const.RedisCacheExtime.USER_ORDER);
             //插入秒杀订单表
             seckillOrderMapper.insertSelective(seckillOrder);
             return orderInfo;
@@ -96,10 +97,10 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     }
 
     public long getSeckillResult(Long userId, long goodsId) {
-        SeckillOrder order = getSeckillOrderByUserIdGoodsId(userId, goodsId);
-        if (order != null) {
+//        SeckillOrder order = getSeckillOrderByUserIdGoodsId(userId, goodsId);
+        if (redisService.exists(RedisPrefixKeyConst.GOODS_USER_ORDER, userId + "_" + goodsId)) {
             //秒杀成功
-            return order.getOrderId();
+            return 1;
         }
         if (isGoodsOver(goodsId)) {
             return -1;

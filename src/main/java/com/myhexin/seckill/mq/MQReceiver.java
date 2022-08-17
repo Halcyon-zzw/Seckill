@@ -34,11 +34,13 @@ public class MQReceiver {
         GoodsBo goods = goodsService.getseckillGoodsBoByGoodsId(goodsId);
         int stock = goods.getStockCount();
         if (stock <= 0) {
+            LOGGER.info("===============秒杀完===================");
             return;
         }
         //判断是否已经秒杀到了
         SeckillOrder order = seckillOrderService.getSeckillOrderByUserIdGoodsId(userId, goodsId);
         if (order != null) {
+            LOGGER.info("===============重复秒杀===================");
             return;
         }
         //减库存 下订单 写入秒杀订单

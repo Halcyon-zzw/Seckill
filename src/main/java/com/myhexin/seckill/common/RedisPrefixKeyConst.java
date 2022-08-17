@@ -9,9 +9,8 @@ public class RedisPrefixKeyConst {
     public static String WITH_EXPIRE = "access";
 
     public static String GOODS_LIST = "gl";
-    public static String GOODS_DETAIL = "gd";
     public static String GOODS_STOCK = "gs";
 
+    public static String GOODS_USER_ORDER = "guo_";
     public static String GOODS_OVER = "go_";
-    public static String SECKILL_PATH = "sc_path_";
 }
