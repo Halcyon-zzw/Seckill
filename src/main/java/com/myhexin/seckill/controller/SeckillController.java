@@ -22,8 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 import static com.myhexin.seckill.common.Const.POLL_SLEEP_TIME;
 
@@ -161,25 +160,33 @@ public class SeckillController {
 
 
     @GetMapping(value = "/test-seckill")
-    public void test02(@RequestParam("product_id") Long productId,
+    public String test02(@RequestParam("product_id") Long productId,
                        @RequestParam("product_amount") Integer productAmount,
-                       @RequestParam("user_count") int count) throws InterruptedException {
+                       @RequestParam("user_count") int count) throws InterruptedException, ExecutionException {
 
         final ProductDeplouResponse productDeplouResponse = seckillDeploy(productId, productAmount, "2022-8-8 12:00:00");
         SeckillEvent seckillEvent = (SeckillEvent) productDeplouResponse.getData();
         Map<String, List<Long>> map = new ConcurrentHashMap<>();
+        map.put("0", new ArrayList<>());
+        ExecutorService pool = Executors.newFixedThreadPool(100);
+        List<Future<String>> futures = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             Long userId = (long) i;
-            new Thread(() -> {
+            Callable<String> callable = () -> {
                 final SeckillResponse seckillResponse = seckillProduct(seckillEvent.getEventId(), userId);
-                final String statusCode = seckillResponse.getStatusCode();
-                if (map.get(statusCode) == null) {
-                    map.put(statusCode, new CopyOnWriteArrayList<>());
-                }
-                map.get(statusCode).add(userId);
-            }).start();
+                return seckillResponse.getStatusCode();
+            };
+            futures.add(pool.submit(callable));
         }
-        Thread.sleep(5000);
+        for (int i = 0; i < futures.size(); i++) {
+            final String code = futures.get(i).get();
+            if (map.get(code) == null) {
+                map.put(code, new ArrayList<>());
+            }
+            map.get(code).add((long) i);
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("抢到商品人数: " + map.get("0").size());
         map.forEach((k, v) -> {
             if ("0".equals(k)) {
                 System.out.println("======================");
@@ -191,6 +198,7 @@ public class SeckillController {
                 System.out.println("去重后数量: " + new HashSet<>(v).size());
             }
         });
+        return sb.toString();
     }
 
     private CodeMsg getParamError(String param) {
